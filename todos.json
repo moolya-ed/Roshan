@@ -46,11 +46,5 @@
         "title": "Buy groceries",
         "description": "Milk, Eggs, Bread",
         "doneStatus": false
-    },
-    {
-        "id": "b810ff5a-74c0-44be-8b3a-af65af755371",
-        "title": "Buy groceries",
-        "description": "Milk, Eggs, Bread",
-        "doneStatus": false
     }
 ]
