@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>📝 Todo App</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* Styles for the app */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #2c3e50;
+    }
+
+    .menu {
+      margin-top: 20px;
+    }
+
+    .menu a {
+      display: block;
+      padding: 10px;
+      background-color: #3498db;
+      color: white;
+      text-decoration: none;
+      margin: 5px 0;
+      border-radius: 5px;
+    }
+
+    .menu a:hover {
+      background-color: #2980b9;
+    }
+
+    #add-todo-section,
+    #edit-form-section {
+      margin-top: 20px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <!-- Home Page (Navigation) -->
+  <h1>📝 Todo App</h1>
+  <div class="menu">
+    <a href="#view" id="view-link">📋 View Todos</a>
+    <a href="#read" id="read-link">🔍 Read Todo</a>
+    <a href="#create" id="create-link">➕ Create Todo</a>
+    <a href="#update" id="update-link">📝 Update Todo</a>
+    <a href="#delete" id="delete-link">❌ Delete Todo</a>
+  </div>
+
+  <!-- Create Todo Page -->
+  <div id="create" style="display:none;">
+    <h2>➕ Create Todo</h2>
+    <section id="add-todo-section">
+      <input id="title" placeholder="Enter title" />
+      <textarea id="description" placeholder="Enter description"></textarea>
+      <label><input type="checkbox" id="done" /> Done</label><br /><br />
+      <button id="add-todo-btn">Add Todo</button>
+    </section>
+  </div>
+
+  <!-- View Todos Page -->
+  <div id="view" style="display:none;">
+    <h2>📋 View Todos</h2>
+    <ul id="todo-list"></ul>
+  </div>
+
+  <!-- Read Todo Page -->
+  <div id="read" style="display:none;">
+    <h2>🔍 Read Todo</h2>
+    <input id="todo-id" placeholder="Enter Todo ID" />
+    <button id="load-todo-btn">Load Todo</button>
+    <div id="todo-details" style="display:none;">
+      <h3>Title: <span id="todo-title"></span></h3>
+      <p id="todo-description"></p>
+      <p id="todo-status"></p>
+    </div>
+  </div>
+
+  <!-- Update Todo Page -->
+  <div id="update" style="display:none;">
+    <h2>📝 Update Todo</h2>
+    <input id="todo-id-update" placeholder="Enter Todo ID" />
+    <button id="load-todo-btn-update">Load Todo</button>
+    <div id="edit-form-section" style="display: none; margin-top: 15px;">
+      <input id="edit-title" placeholder="New Title" />
+      <textarea id="edit-description" placeholder="New Description"></textarea>
+      <label><input type="checkbox" id="edit-done" /> Done</label><br /><br />
+      <button id="update-todo-btn">Update Todo</button>
+    </div>
+  </div>
+
+  <!-- Delete Todo Page -->
+  <div id="delete" style="display:none;">
+    <h2>❌ Delete Todo</h2>
+    <input id="todo-id-delete" placeholder="Enter Todo ID" />
+    <button id="delete-todo-btn">Delete Todo</button>
+  </div>
+
+  <script>
+    // Toggle visibility of sections
+    function showSection(sectionId) {
+      const sections = ['create', 'view', 'read', 'update', 'delete'];
+      sections.forEach(section => {
+        document.getElementById(section).style.display = section === sectionId ? 'block' : 'none';
+      });
+    }
+
+    // Navigation links click event
+    document.getElementById('view-link').addEventListener('click', () => showSection('view'));
+    document.getElementById('read-link').addEventListener('click', () => showSection('read'));
+    document.getElementById('create-link').addEventListener('click', () => showSection('create'));
+    document.getElementById('update-link').addEventListener('click', () => showSection('update'));
+    document.getElementById('delete-link').addEventListener('click', () => showSection('delete'));
+
+    // Create Todo functionality
+    document.getElementById('add-todo-btn')?.addEventListener('click', async () => {
+      const title = document.getElementById('title').value;
+      const description = document.getElementById('description').value;
+      const done = document.getElementById('done').checked;
+
+      const newTodo = { title, description, done };
+
+      await fetch('/todos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTodo),
+      });
+
+      alert("Todo created successfully!");
+      document.getElementById('title').value = '';
+      document.getElementById('description').value = '';
+      document.getElementById('done').checked = false;
+    });
+
+    // View Todos functionality
+    async function fetchTodos() {
+      const res = await fetch('/todos');
+      const todos = await res.json();
+      const list = document.getElementById('todo-list');
+      list.innerHTML = '';
+
+      todos.forEach(todo => {
+        const item = document.createElement('li');
+        item.textContent = `${todo.title} - ${todo.description || ''} ${todo.done ? '✅' : ''}`;
+        list.appendChild(item);
+      });
+    }
+
+    if (document.getElementById('todo-list')) {
+      fetchTodos();
+    }
+
+    // Read Todo functionality
+    document.getElementById('load-todo-btn')?.addEventListener('click', async () => {
+      const todoId = document.getElementById('todo-id').value;
+
+      try {
+        const res = await fetch(`/todos/${todoId}`);
+        if (!res.ok) throw new Error("Todo not found");
+
+        const todo = await res.json();
+        document.getElementById('todo-title').textContent = `Title: ${todo.title}`;
+        document.getElementById('todo-description').textContent = `Description: ${todo.description || ''}`;
+        document.getElementById('todo-status').textContent = `Status: ${todo.done ? 'Done' : 'Not Done'}`;
+        document.getElementById('todo-details').style.display = 'block';
+      } catch (err) {
+        alert("Todo with the given ID was not found.");
+      }
+    });
+
+    // Update Todo functionality
+    let currentTodo = null;
+
+    document.getElementById('load-todo-btn-update')?.addEventListener('click', async () => {
+      const todoId = document.getElementById('todo-id-update').value;
+
+      try {
+        const res = await fetch(`/todos/${todoId}`);
+        if (!res.ok) throw new Error("Todo not found");
+
+        const todo = await res.json();
+        currentTodo = todo;
+
+        document.getElementById('edit-title').value = todo.title;
+        document.getElementById('edit-description').value = todo.description || '';
+        document.getElementById('edit-done').checked = todo.done;
+
+        document.getElementById('edit-form-section').style.display = 'block';
+      } catch (err) {
+        alert("Todo with the given ID was not found.");
+      }
+    });
+
+    document.getElementById('update-todo-btn')?.addEventListener('click', async () => {
+      const updatedTodo = {
+        title: document.getElementById('edit-title').value,
+        description: document.getElementById('edit-description').value,
+        done: document.getElementById('edit-done').checked,
+      };
+
+      await fetch(`/todos/${currentTodo.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedTodo),
+      });
+
+      alert("Todo updated successfully!");
+    });
+
+    // Delete Todo functionality
+    document.getElementById('delete-todo-btn')?.addEventListener('click', async () => {
+      const todoId = document.getElementById('todo-id-delete').value;
+
+      try {
+        await fetch(`/todos/${todoId}`, { method: 'DELETE' });
+        alert("Todo deleted successfully!");
+      } catch (err) {
+        alert("Error deleting Todo.");
+      }
+    });
+  </script>
+</body>
+</html>
